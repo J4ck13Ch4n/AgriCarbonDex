@@ -1,0 +1,293 @@
+body {
+    background: #111214;
+    color: #fff;
+    font-family: 'Inter', 'Roboto Mono', 'Menlo', 'monospace', 'Arial', sans-serif;
+}
+
+.card-dark {
+    background: #181A20;
+    border: 1px solid #23242a;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #000a;
+}
+
+.navbar-custom {
+    background: #111214;
+    border-bottom: 1px solid #23242a;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+}
+
+.navbar-custom .logo {
+    width: 32px;
+    height: 32px;
+    background: #23242a;
+    border-radius: 6px;
+    margin-right: 12px;
+}
+
+.navbar-custom .nav-title {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: #fff;
+}
+
+.navbar-custom .wallet-btn {
+    background: #23242a;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 6px 18px;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.orderform-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.orderform-tabs button {
+    flex: 1;
+    font-weight: 600;
+    font-size: 15px;
+    border-radius: 6px;
+    border: none;
+    padding: 8px 0;
+    background: #23242a;
+    color: #fff;
+    transition: background 0.2s;
+}
+
+.orderform-tabs .active {
+    background: #1e2329;
+    color: #00ffae;
+}
+
+.orderform-label {
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 4px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.orderform-input {
+    background: #23242a;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 12px;
+    width: 100%;
+    font-size: 16px;
+}
+
+.orderform-btn {
+    width: 100%;
+    padding: 12px 0;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 18px;
+    border: none;
+    background: linear-gradient(90deg, #00ffae 0%, #0077ff 100%);
+    color: #111;
+    transition: filter 0.2s;
+}
+
+.orderform-btn.sell {
+    background: linear-gradient(90deg, #ff3c3c 0%, #ffb800 100%);
+    color: #111;
+}
+
+.orderform-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.orderbook-section {
+    margin-bottom: 18px;
+}
+
+.orderbook-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.orderbook-sell th,
+.orderbook-sell td {
+    color: #ff3c3c;
+}
+
+.orderbook-buy th,
+.orderbook-buy td {
+    color: #00ffae;
+}
+
+.orderbook-table {
+    width: 100%;
+    font-size: 13px;
+    background: transparent;
+}
+
+.orderbook-table th {
+    font-weight: 500;
+    background: #181A20;
+}
+
+.orderbook-table td {
+    background: #181A20;
+}
+
+.orderbook-table tr {
+    border-bottom: 1px solid #23242a;
+}
+
+.tabpanel {
+    background: #181A20;
+    border-radius: 10px;
+    border: 1px solid #23242a;
+    margin-top: 0;
+    padding: 0;
+    border-top: none;
+}
+
+.tabpanel-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #23242a;
+    margin-bottom: 8px;
+}
+
+.tabpanel-tabs button {
+    flex: 1;
+    background: transparent;
+    color: #888;
+    border: none;
+    font-size: 14px;
+    font-family: 'Roboto Mono', monospace;
+    padding: 8px 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border 0.2s;
+}
+
+.tabpanel-tabs .active {
+    color: #00ffae;
+    border-bottom: 2px solid #00ffae;
+}
+
+.table-dark {
+    background: #181A20;
+    color: #fff;
+}
+
+.table-dark th {
+    background: #23242a;
+    color: #888;
+    font-weight: 500;
+}
+
+.table-dark td {
+    background: #181A20;
+    color: #fff;
+}
+
+/* Scrollbar */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #23242a #181A20;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    background: #181A20;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #23242a;
+    border-radius: 6px;
+}
+
+/* Đảm bảo PriceChart và TabPanel cùng width, không lệch trái/phải */
+.pricechart-wrap {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* OrderForm và OrderBook không có margin/padding ngoài */
+.orderform-col, .orderbook-col {
+    margin: 0;
+    padding: 0;
+}
+
+/* Đảm bảo border-radius chỉ ở góc ngoài cùng, không bị đè lên nhau */
+.orderform-col .card-dark {
+    border-top-left-radius: 12px !important;
+    border-bottom-left-radius: 12px !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+.orderbook-col .card-dark {
+    border-top-right-radius: 12px !important;
+    border-bottom-right-radius: 12px !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+.pricechart-wrap .card-dark {
+    border-radius: 0 !important;
+}
+.pricechart-wrap .tabpanel {
+    border-radius: 0 0 0 0 !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    border-top: none !important;
+}
+
+/* Đảm bảo border không bị đè lên nhau */
+.card-dark, .tabpanel {
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #23242a;
+}
+
+/* Xóa gap giữa các box nhưng giữ border */
+.trade-flex-row, .trade-flex-main {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 3px !important;
+}
+.orderform-col, .orderbook-col, .pricechart-wrap {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100%;
+}
+
+/* Đảm bảo chiều cao các box bằng nhau */
+.orderform-col .card-dark,
+.orderbook-col .card-dark,
+.pricechart-wrap .card-dark {
+    height: 100%;
+    min-height: 480px;
+}
+
+/* Đảm bảo TabPanel không bị đè lên chart */
+.pricechart-wrap {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.pricechart-wrap .card-dark {
+    flex: 1 1 auto;
+}
+.pricechart-wrap .tabpanel {
+    flex: 0 0 auto;
+}

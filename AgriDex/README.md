@@ -1,12 +1,20 @@
-# React + Vite
+# Carbon Credit DEX Frontend Skeleton
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Cài đặt & chạy thử
 
-Currently, two official plugins are available:
+```sh
+npm install
+npm run dev
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Mở trình duyệt: http://localhost:5173/trade
 
-## Expanding the ESLint configuration
+## Cấu trúc dự án
+- UI layout giống ảnh mẫu, chia 3 cột, tab panel dưới, màu nền đen, chữ trắng, accent xanh/đỏ.
+- Các component/table chỉ nhận data={[]} (placeholder), chưa fetch thật.
+- Để gắn API, sửa các TODO trong `src/utils/api.js` và các component.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Ghi chú
+- Đã cấu hình sẵn TailwindCSS + Bootstrap trong `src/style/global.css`.
+- Đã scaffold sẵn các file layout, table, page, route.
+- Chưa có logic blockchain, chỉ UI và placeholder.
