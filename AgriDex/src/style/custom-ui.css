@@ -17,8 +17,10 @@ body {
     height: 64px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    /* căn giữa toàn bộ nội dung */
     padding: 0 32px;
+    position: relative;
 }
 
 .navbar-custom .logo {
@@ -34,6 +36,30 @@ body {
     font-size: 18px;
     letter-spacing: 2px;
     color: #fff;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    white-space: nowrap;
+}
+
+.navbar-custom>.flex {
+    position: absolute;
+    left: 32px;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-custom>div:last-child {
+    position: absolute;
+    right: 32px;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
 }
 
 .navbar-custom .wallet-btn {
@@ -322,137 +348,157 @@ body {
 }
 
 .tradebox-container {
-  max-width: 400px;
-  margin: 40px auto;
+    max-width: 400px;
+    margin: 40px auto;
 }
+
 .tradebox-card {
-  background: #181A20;
-  border-radius: 20px;
-  padding: 20px 16px 20px 16px;
-  box-shadow: 0 2px 8px #000a;
-  margin-bottom: 10px;
-  border: 1px solid #23242a;
+    background: #181A20;
+    border-radius: 20px;
+    padding: 20px 16px 20px 16px;
+    box-shadow: 0 2px 8px #000a;
+    margin-bottom: 10px;
+    border: 1px solid #23242a;
 }
+
 .tradebox-header {
-  display: flex;
-  justify-content: space-between;
-  color: #fff;
-  font-size: 16px;
-  margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 10px;
 }
+
 .tradebox-flag {
-  background: #23242a;
-  border-radius: 50%;
-  padding: 4px 8px;
-  font-size: 16px;
+    background: #23242a;
+    border-radius: 50%;
+    padding: 4px 8px;
+    font-size: 16px;
 }
+
 .tradebox-amount {
-  text-align: center;
-  font-size: 64px;
-  color: #aaa;
-  margin-bottom: 10px;
-  font-weight: 600;
+    text-align: center;
+    font-size: 64px;
+    color: #aaa;
+    margin-bottom: 10px;
+    font-weight: 600;
 }
+
 .tradebox-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 0px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 0px;
 }
+
 .tradebox-buttons button {
-  background: #23242a;
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 10px 24px;
-  font-size: 18px;
-  font-weight: 500;
+    background: #23242a;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 24px;
+    font-size: 18px;
+    font-weight: 500;
 }
+
 .tradebox-token {
-  background: #181A20;
-  border-radius: 16px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 18px;
-  margin-bottom: 10px;
-  border: 1px solid #23242a;
+    background: #181A20;
+    border-radius: 16px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    border: 1px solid #23242a;
 }
+
 .tradebox-token-icon {
-  font-size: 28px;
+    font-size: 28px;
 }
+
 .tradebox-connect {
-  width: 100%;
-  background: #00ffae;
-  color: #111;
-  border: none;
-  border-radius: 20px;
-  padding: 16px 0;
-  font-size: 20px;
-  font-weight: 600;
-  margin-top: 0px;
-  transition: background 0.2s;
+    width: 100%;
+    background: #00ffae;
+    color: #111;
+    border: none;
+    border-radius: 20px;
+    padding: 16px 0;
+    font-size: 20px;
+    font-weight: 600;
+    margin-top: 0px;
+    transition: background 0.2s;
 }
+
 .tradebox-connect:hover {
-  background: #00e6a0;
+    background: #00e6a0;
 }
+
 .tradebox-connect-enter {
-  background: #111 !important;
-  color: #00ffae !important;
-  border: 1px solid #00ffae;
+    background: #111 !important;
+    color: #00ffae !important;
+    border: 1px solid #00ffae;
 }
 
 .topright-connect-btn {
-  background: #00ffae;
-  color: #111;
-  border: none;
-  border-radius: 18px;
-  padding: 10px 28px;
-  font-size: 18px;
-  font-weight: 600;
-  box-shadow: 0 2px 8px #0003;
-  transition: background 0.2s, color 0.2s;
-  cursor: pointer;
+    background: #00ffae;
+    color: #111;
+    border: none;
+    border-radius: 18px;
+    padding: 10px 28px;
+    font-size: 18px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px #0003;
+    transition: background 0.2s, color 0.2s;
+    cursor: pointer;
 }
+
 .topright-connect-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .buysell-nav {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin: 32px 0 24px 0;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 32px 0 24px 0;
 }
+
 .buysell-nav button {
-  background: #23242a;
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 10px 36px;
-  font-size: 20px;
-  font-weight: 600;
-  transition: background 0.2s, color 0.2s;
-  cursor: pointer;
+    background: #23242a;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 36px;
+    font-size: 20px;
+    font-weight: 600;
+    transition: background 0.2s, color 0.2s;
+    cursor: pointer;
 }
+
 .buysell-nav button.active {
-  background: #00ffae;
-  color: #111;
+    background: #00ffae;
+    color: #111;
 }
 
 /* Hide number input spinner for all browsers */
 .tradebox-amount-input::-webkit-outer-spin-button,
 .tradebox-amount-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.tradebox-amount-input[type=number] {
-  -moz-appearance: textfield;
-  appearance: textfield;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
-.tradebox-container, .tradebox-card, .tradebox-header, .tradebox-amount, .tradebox-buttons button, .tradebox-token {
-  font-family: 'Roboto Mono', monospace, 'Inter', 'Menlo', 'Arial', sans-serif;
+.tradebox-amount-input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.tradebox-container,
+.tradebox-card,
+.tradebox-header,
+.tradebox-amount,
+.tradebox-buttons button,
+.tradebox-token {
+    font-family: 'Roboto Mono', monospace, 'Inter', 'Menlo', 'Arial', sans-serif;
 }
