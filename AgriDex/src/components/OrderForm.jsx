@@ -13,7 +13,7 @@ const OrderForm = ({ data = [] }) => {
     const currentLeverage = leverage === '' ? 0.0 : Math.min(parseFloat(leverage) || 0, maxLeverage);
     const accentColor = tab === 'buy' ? '#00ffae' : '#ff3c3c';
     return (
-        <div className="card-dark" style={{ maxWidth: 400, padding: 0, borderRadius: 12, border: '1px solid #23242a', fontFamily: 'Roboto Mono, monospace', background: '#181A20', fontSize: 13 }}>
+        <div className="card-dark" style={{ maxWidth: 400, padding: 0, height: 800, borderRadius: 12, border: '1px solid #23242a', fontFamily: 'Roboto Mono, monospace', background: '#181A20', fontSize: 13 }}>
             <div style={{ display: 'flex', borderBottom: '1px solid #23242a', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
                 <button
                     className={tab === 'buy' ? 'active' : ''}

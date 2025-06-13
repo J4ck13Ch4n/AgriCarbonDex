@@ -16,7 +16,7 @@ const TabPanel = () => {
     const [tab, setTab] = useState('positions');
     const Current = TABS.find(t => t.key === tab)?.component || PositionsTable;
     return (
-        <div className="tabpanel">
+        <div className="tabpanel" style={{ padding: 0, margin: 0 }}>
             <div className="tabpanel-tabs">
                 {TABS.map(t => (
                     <button
@@ -28,7 +28,7 @@ const TabPanel = () => {
                     </button>
                 ))}
             </div>
-            <div className="overflow-auto" style={{ minHeight: 120, maxHeight: 220 }}>
+            <div className="overflow-auto custom-scrollbar" style={{ height: 260, padding: 0, margin: 0 }}>
                 <Current data={[]} />
             </div>
         </div>
