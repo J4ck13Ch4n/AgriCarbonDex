@@ -88,10 +88,10 @@ Dự án được chia thành 3 thành phần chính:
 
 1.  Mở trình duyệt và truy cập `http://localhost:5173`.
 2.  Kết nối ví MetaMask của bạn với mạng Sepolia.
-3.  **Mua Token CCT:** Truy cập trang "Buy" để mua token CCT. Chức năng này có thể được quản lý bởi backend (admin mint) hoặc bạn phải tự trả phí gas tùy theo logic hiện tại.
+3.  **Mua Token CCT:** Truy cập trang "/buy" để mua token CCT. Chức năng này có thể được quản lý bởi backend (admin mint).
 4.  **List NFT:**
     -   Đảm bảo bạn sở hữu một vài Carbon Offset NFT.
-    -   Truy cập trang "List".
+    -   Truy cập trang "/list".
     -   Với mỗi NFT, bạn cần nhấn "Approve" để cấp quyền cho sàn DEX tương tác với NFT đó.
     -   Sau khi approve, nhập giá (bằng CCT) và nhấn "List" để đưa NFT lên sàn.
-5.  **Giao dịch:** Truy cập các trang "Trade" hoặc "Buy NFT" để xem các NFT đang được niêm yết và thực hiện giao dịch.
+5.  **Giao dịch:** Truy cập các trang "/trade" để xem các NFT đang được niêm yết và thực hiện giao dịch.
