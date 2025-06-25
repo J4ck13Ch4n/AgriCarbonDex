@@ -1,10 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connectMetamask } from '../utils/metamask';
+import { ethers } from 'ethers';
 
 const TradeBox = ({ type, externalAccount, onConnect }) => {
     const [account, setAccount] = useState(null);
     const [amount, setAmount] = useState('');
     const [connecting, setConnecting] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
+
+    // Luôn kiểm tra trạng thái đăng nhập MetaMask khi load trang và lắng nghe thay đổi
+    useEffect(() => {
+        const checkMetamaskConnection = async () => {
+            if (!window.ethereum) return;
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    const currentAccount = accounts[0];
+                    setAccount(currentAccount);
+                    if (onConnect) onConnect(currentAccount);
+                }
+            } catch (err) {
+                console.error("Lỗi khi lấy tài khoản:", err);
+            }
+        };
+
+        const handleAccountsChanged = (accounts) => {
+            const newAccount = accounts.length > 0 ? accounts[0] : null;
+            setAccount(newAccount);
+            if (onConnect) onConnect(newAccount);
+        };
+
+        checkMetamaskConnection();
+
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+        }
+
+        return () => {
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+            }
+        };
+    }, [onConnect]);
 
     // Ưu tiên externalAccount nếu có
     const effectiveAccount = externalAccount || account;
@@ -21,15 +59,49 @@ const TradeBox = ({ type, externalAccount, onConnect }) => {
         setConnecting(false);
     };
 
+    // Xử lý gửi yêu cầu mua CCT (chỉ khi type === 'buy')
+    const handleRequest = async () => {
+        if (!effectiveAccount) {
+            handleConnect();
+            return;
+        }
+        if (!amount || isNaN(amount) || Number(amount) <= 0) {
+            setMessage('Vui lòng nhập số lượng CCT hợp lệ!');
+            return;
+        }
+        setLoading(true);
+        setMessage('Đang gửi yêu cầu...');
+        try {
+            const res = await fetch('http://localhost:3001/api/request-mint-cct', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address: effectiveAccount, amount }),
+            });
+            if (res.ok) {
+                setMessage('Đã mua thành công!');
+                setAmount('');
+            } else {
+                const data = await res.json();
+                setMessage('Lỗi: ' + (data.error || res.statusText));
+            }
+        } catch (err) {
+            setMessage('Lỗi kết nối server!');
+        }
+        setLoading(false);
+    };
+
     let buttonText = 'Connect wallet';
     let buttonDisabled = false;
+    let buttonAction = handleConnect;
     if (effectiveAccount) {
         if (!amount) {
             buttonText = 'Enter an amount';
             buttonDisabled = true;
+            buttonAction = undefined;
         } else {
-            buttonText = 'Continue';
-            buttonDisabled = false;
+            buttonText = type === 'buy' ? (loading ? 'Đang gửi...' : 'Gửi yêu cầu mua CCT') : 'Continue';
+            buttonDisabled = loading;
+            buttonAction = type === 'buy' ? handleRequest : undefined;
         }
     }
 
@@ -93,11 +165,14 @@ const TradeBox = ({ type, externalAccount, onConnect }) => {
                     'tradebox-connect' +
                     (effectiveAccount && !amount ? ' tradebox-connect-enter' : '')
                 }
-                onClick={effectiveAccount ? undefined : handleConnect}
+                onClick={buttonAction}
                 disabled={connecting || buttonDisabled}
             >
                 {connecting ? 'Connecting...' : buttonText}
             </button>
+            {type === 'buy' && message && (
+                <div style={{ marginTop: 8, color: message.startsWith('Lỗi') ? 'red' : '#00ffae', fontWeight: 500, textAlign: 'center' }}>{message}</div>
+            )}
         </div>
     );
 };
