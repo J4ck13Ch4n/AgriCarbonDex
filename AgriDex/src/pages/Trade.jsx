@@ -9,12 +9,55 @@ import { NFTDEX_ADDRESS } from '../utils/constants';
 import NFTDEX_ABI from '../abi/NFTDEX.json';
 import ERC20_ABI from '../abi/CarbonCreditToken.json'; // Import ERC20 ABI from CarbonCreditToken.json
 import { getContracts } from '../utils/contractHelpers';
+import { connectMetamask } from '../utils/metamask';
 
 const Trade = () => {
+    const [account, setAccount] = useState(null);
+    const [connecting, setConnecting] = useState(false);
     const [listedNfts, setListedNfts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [buyingNftInfo, setBuyingNftInfo] = useState({ id: null, loading: false, error: null, message: '' }); // For buy process feedback
+
+    const handleConnect = async () => {
+        setConnecting(true);
+        try {
+            const acc = await connectMetamask();
+            setAccount(acc);
+        } catch (e) {
+            alert('Failed to connect MetaMask!');
+        }
+        setConnecting(false);
+    };
+
+    // Luôn kiểm tra trạng thái đăng nhập MetaMask khi load trang
+    useEffect(() => {
+        const checkMetamask = async () => {
+            if (window.ethereum && window.ethereum.selectedAddress) {
+                setAccount(window.ethereum.selectedAddress);
+            } else if (window.ethereum && window.ethereum.request) {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (accounts && accounts.length > 0) {
+                        setAccount(accounts[0]);
+                    }
+                } catch (err) {
+                    // Không làm gì nếu không lấy được tài khoản
+                }
+            }
+            // Lắng nghe sự kiện thay đổi tài khoản
+            if (window.ethereum && window.ethereum.on) {
+                const handleAccountsChanged = (accounts) => {
+                    setAccount(accounts && accounts.length > 0 ? accounts[0] : null);
+                };
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+                return () => {
+                    window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+                };
+            }
+        };
+        checkMetamask();
+    }, []);
 
     useEffect(() => {
         const fetchListedNfts = async () => {
@@ -132,9 +175,9 @@ const Trade = () => {
 
     return (
         <div style={{ background: '#111214', minHeight: '100vh', color: 'white' }}>
-            <Navbar />
+            <Navbar account={account} connecting={connecting} onConnect={handleConnect} />
             <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '24px 8px' }}>
-                <div style={{ display: 'flex', gap: '10px', minHeight: '400px' }}>
+                {/*<div style={{ display: 'flex', gap: '10px', minHeight: '400px' }}>
                     <div style={{ flex: '1 1 25%', minWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'stretch', marginRight: 12 }}>
                         <OrderForm data={[]} />
                     </div>
@@ -155,39 +198,105 @@ const Trade = () => {
                             />
                         </div>
                     </div>
-                </div>
+                </div>*/}
 
                 {/* Section to display listed NFTs */}
-                <div style={{ marginTop: '20px', padding: '20px', background: '#1a1b1e', borderRadius: '8px', color: 'white' /* Thêm màu chữ để dễ thấy */ }}>
+                <div style={{ marginTop: '20px', padding: '20px', background: '#1a1b1e', borderRadius: '8px', color: 'white' }}>
                     <h2>NFTs For Sale</h2>
                     {/* TẠM THỜI COMMENT CÁC ĐIỀU KIỆN LOADING/ERROR */}
                     {/* {loading && <p>Loading listed NFTs...</p>} */}
                     {/* {error && <p style={{ color: 'red' }}>Error: {error}</p>} */}
-
-                    {listedNfts.length === 0 && (
-                        <p>No NFTs are currently listed for sale (or data still loading/error).</p>
-                    )}
                     {listedNfts.length > 0 && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px' }}>
                             {listedNfts.map((nft) => (
-                                <div key={nft.listingId} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px', background: '#222327' }}>
-                                    <p><strong>Listing ID:</strong> {nft.listingId}</p>
-                                    <p><strong>Token ID:</strong> {nft.tokenId}</p>
-                                    <p><strong>NFT Contract:</strong> {nft.nftContract}</p>
-                                    <p><strong>Seller:</strong> {nft.seller}</p>
-                                    <p><strong>Price:</strong> {nft.price} CCT</p>
+                                <div key={nft.listingId} style={{ minWidth: 340, maxWidth: 420, background: '#232426', borderRadius: 12, padding: 24, color: '#fff', boxShadow: '0 2px 8px #0002', display: 'flex', flexDirection: 'column', marginBottom: 16 }}>
+                                    <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 4 }}>CarbonNFT #{nft.listingId}</div>
+                                    <div style={{ margin: '12px 0 0 0', fontSize: 15 }}>
+                                        <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ color: '#aaa' }}>Contract Address:</span>
+                                            <span style={{ color: '#00ffae', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} title={nft.nftContract}>
+                                                {nft.nftContract.slice(0, 6) + '...' + nft.nftContract.slice(-4)}
+                                                <button
+                                                    onClick={() => navigator.clipboard.writeText(nft.nftContract)}
+                                                    title="Copy contract address"
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        marginLeft: 4,
+                                                        padding: 0,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        color: '#00ffae',
+                                                        fontSize: 18
+                                                    }}
+                                                >
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ffae" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+                                                </button>
+                                            </span>
+                                        </div>
+                                        <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ color: '#aaa' }}>Token ID:</span>
+                                            <span>{nft.tokenId}</span>
+                                        </div>
+                                        <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ color: '#aaa' }}>Token Standard:</span>
+                                            <span>ERC721</span>
+                                        </div>
+                                        <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ color: '#aaa' }}>Owner:</span>
+                                            <span style={{ color: '#00ffae', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} title={nft.seller}>
+                                                {nft.seller.slice(0, 6) + '...' + nft.seller.slice(-4)}
+                                                <button
+                                                    onClick={() => navigator.clipboard.writeText(nft.seller)}
+                                                    title="Copy owner address"
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        marginLeft: 4,
+                                                        padding: 0,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        color: '#00ffae',
+                                                        fontSize: 18
+                                                    }}
+                                                >
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ffae" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+                                                </button>
+                                            </span>
+                                        </div>
+                                        <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ color: '#aaa' }}>Price:</span>
+                                            <span style={{ color: '#ffe066', fontWeight: 600 }}>{nft.price} CCT</span>
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={() => handleBuyNft(nft)}
                                         disabled={buyingNftInfo.loading && buyingNftInfo.id === nft.listingId}
-                                        style={{ marginTop: '10px', padding: '8px 12px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                        style={{
+                                            marginTop: 18,
+                                            padding: '10px 0',
+                                            background: '#00ffae', // đồng bộ màu với button connect wallet
+                                            color: '#111',
+                                            border: '1px solid #00ffae',
+                                            borderRadius: '6px',
+                                            fontWeight: 700,
+                                            fontSize: 16,
+                                            cursor: 'pointer',
+                                            opacity: (buyingNftInfo.loading && buyingNftInfo.id === nft.listingId) ? 0.7 : 1,
+                                            fontFamily: 'Roboto Mono, monospace',
+                                            letterSpacing: 1,
+                                            minWidth: 120
+                                        }}
                                     >
                                         {buyingNftInfo.loading && buyingNftInfo.id === nft.listingId ? 'Processing...' : 'Buy NFT'}
                                     </button>
                                     {buyingNftInfo.id === nft.listingId && buyingNftInfo.message && (
-                                        <p style={{ marginTop: '5px', fontSize: '0.9em', color: 'lightgreen' }}>{buyingNftInfo.message}</p>
+                                        <p style={{ marginTop: '8px', fontSize: '1em', color: 'lightgreen' }}>{buyingNftInfo.message}</p>
                                     )}
                                     {buyingNftInfo.id === nft.listingId && buyingNftInfo.error && (
-                                        <p style={{ marginTop: '5px', fontSize: '0.9em', color: 'red' }}>Error: {buyingNftInfo.error}</p>
+                                        <p style={{ marginTop: '8px', fontSize: '1em', color: 'red' }}>Error: {buyingNftInfo.error}</p>
                                     )}
                                 </div>
                             ))}
