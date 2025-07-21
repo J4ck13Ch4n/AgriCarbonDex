@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* Import fonts và CSS tùy chỉnh */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap');
 @import "./custom-ui.css";
@@ -40,13 +41,23 @@
   }
 }
 
+=======
+/* Import custom font cho UI giống mẫu */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;700&display=swap');
+@import "./custom-ui.css";
+@import "bootstrap/dist/css/bootstrap.css";
+
+>>>>>>> 35b40b15d7087da67e4b04d1a99d95a2efdcbd96
 body {
   font-family: 'Inter', 'Roboto Mono', 'Menlo', 'monospace', 'Arial', sans-serif;
   background: #111214;
   color: #fff;
+<<<<<<< HEAD
   margin: 0;
   padding: 0;
   min-height: 100vh;
+=======
+>>>>>>> 35b40b15d7087da67e4b04d1a99d95a2efdcbd96
 }
 
 html {

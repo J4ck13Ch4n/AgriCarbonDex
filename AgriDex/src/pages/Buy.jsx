@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'; // Import useEffect for consistency
 import TradeBox from '../components/TradeBox';
 // ĐẢM BẢO FILE metamask.js CÓ CẢ HAI HÀM connectWallet và connectMetamask
-import { connectMetamask } from '../utils/metamask'; 
+import { connectMetamask } from '../utils/metamask';
 import { useLocation, useNavigate } from 'react-router-dom';
 // THAY ĐỔI: XÓA IMPORT NAVBAR, VÌ NÓ ĐƯỢC QUẢN LÝ BỞI LAYOUT
 // import Navbar from '../components/Navbar'; 
@@ -11,7 +11,7 @@ const Buy = () => {
     // và truyền xuống TradeBox
     const [account, setAccount] = useState(null);
     const [connecting, setConnecting] = useState(false);
-    
+
     const location = useLocation();
     const navigate = useNavigate();
     const isBuy = location.pathname === '/buy';
@@ -68,12 +68,13 @@ const Buy = () => {
                 window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
             }
         };
-    }, []); 
+    }, []);
 
 
     return (
         <div className="flex flex-col items-center min-h-[calc(100vh-theme(spacing.20))] bg-gray-900 text-white pt-8">
             <TradeBox type="buy" externalAccount={account} onConnect={handleBoxConnect} />
+
         </div>
     );
 };

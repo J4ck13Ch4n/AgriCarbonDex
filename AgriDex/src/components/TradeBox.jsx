@@ -178,3 +178,4 @@ const TradeBox = ({ type, externalAccount, onConnect }) => {
 };
 
 export default TradeBox;
+

@@ -187,7 +187,7 @@ function NFTCard({ nft, userAddress }) {
                 )}
                 <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: '#aaa' }}>Status:</span>
-                    <span style={{ 
+                    <span style={{
                         color: nft.isListed ? '#00ffae' : '#666',
                         fontWeight: 600,
                         fontSize: 13,
@@ -266,11 +266,11 @@ function NFTCard({ nft, userAddress }) {
                     </div>
                 </div>
             ) : (
-                <div style={{ 
-                    marginTop: 18, 
-                    background: 'rgba(0, 255, 174, 0.05)', 
-                    borderRadius: 8, 
-                    padding: 16, 
+                <div style={{
+                    marginTop: 18,
+                    background: 'rgba(0, 255, 174, 0.05)',
+                    borderRadius: 8,
+                    padding: 16,
                     border: '1px solid rgba(0, 255, 174, 0.2)',
                     textAlign: 'center'
                 }}>
@@ -359,13 +359,13 @@ const MyNFTs = () => {
                 const { offsetNFT, provider, dex } = await getContracts();
                 const nextTokenId = await offsetNFT.nextTokenId();
                 const nftList = [];
-                
+
                 // Lấy thông tin listings từ DEX
                 let listingsMap = {};
                 try {
                     const counter = await dex.listingIdCounter();
                     const listingsCount = parseInt(counter.toString());
-                    
+
                     for (let i = 1; i <= listingsCount; i++) {
                         try {
                             const listing = await dex.listings(i);
@@ -384,7 +384,7 @@ const MyNFTs = () => {
                 } catch (dexError) {
                     console.log("Error fetching DEX listings:", dexError.message);
                 }
-                
+
                 for (let i = 0; i < nextTokenId; i++) {
                     try {
                         const owner = await offsetNFT.ownerOf(i);
@@ -457,7 +457,7 @@ const MyNFTs = () => {
                             } catch (contractError) {
                                 console.log(`Could not connect to NFT contract for metadata:`, contractError.message);
                             }
-                            
+
                             // Kiểm tra xem NFT có được list không
                             const listingKey = `${contractAddress.toLowerCase()}_${i.toString()}`;
                             const listingInfo = listingsMap[listingKey];

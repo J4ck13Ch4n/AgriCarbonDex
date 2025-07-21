@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react'; // Import useEffect for consistency
 import TradeBox from '../components/TradeBox';
 // ĐẢM BẢO FILE metamask.js CÓ CẢ HAI HÀM connectWallet và connectMetamask
-import { connectMetamask } from '../utils/metamask'; 
+import { connectMetamask } from '../utils/metamask';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const Sell = () => {
     const [account, setAccount] = useState(null);
     const [connecting, setConnecting] = useState(false);
-    
+
     const location = useLocation();
     const navigate = useNavigate();
     const isBuy = location.pathname === '/buy';
-    const isSell = location.pathname === '/sell'; 
+    const isSell = location.pathname === '/sell';
 
     // Hàm connect dùng chung cho cả Navbar và TradeBox (theo logic cũ của bạn)
     const handleConnect = async () => {
