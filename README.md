@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# AgriCarbonDexWeb
-=======
 # AgriCarbonDex - Sàn Giao Dịch Tín Chỉ Carbon NFT
 
 ## 1. Giới Thiệu
@@ -98,4 +95,3 @@ Dự án được chia thành 3 thành phần chính:
     -   Với mỗi NFT, bạn cần nhấn "Approve" để cấp quyền cho sàn DEX tương tác với NFT đó.
     -   Sau khi approve, nhập giá (bằng CCT) và nhấn "List" để đưa NFT lên sàn.
 5.  **Giao dịch:** Truy cập các trang "/trade" để xem các NFT đang được niêm yết và thực hiện giao dịch.
->>>>>>> 35b40b15d7087da67e4b04d1a99d95a2efdcbd96
