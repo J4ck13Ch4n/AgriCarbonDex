@@ -6,13 +6,21 @@ import { NFTDEX_ADDRESS } from "../utils/constants";
 import '../style/List.css';
 
 // --- NFT Card Component ---
-function NFTCard({ nft, userAddress }) {
+function NFTCard({ nft, userAddress, nftType }) {
+    // Log NFT type and tokenId for debugging
+    console.log(`NFTCard Rendered: Type=${nftType}, TokenID=${nft.tokenId}`);
     const [price, setPrice] = useState("");
     const [isApproving, setIsApproving] = useState(false);
     const [isListing, setIsListing] = useState(false);
     const [message, setMessage] = useState("");
 
+    // ...existing code...
+    // Ensure approve/list are disabled for debt NFTs
     const handleApprove = async () => {
+        if (nftType !== 'offset') {
+            setMessage("Debt NFT cannot be listed");
+            return;
+        }
         setIsApproving(true);
         setMessage("Requesting approval...");
         try {
@@ -27,6 +35,10 @@ function NFTCard({ nft, userAddress }) {
     };
 
     const handleList = async () => {
+        if (nftType !== 'offset') {
+            setMessage("Debt NFT cannot be listed");
+            return;
+        }
         if (!price || parseFloat(price) <= 0) {
             setMessage("Please enter a valid price.");
             return;
@@ -41,6 +53,7 @@ function NFTCard({ nft, userAddress }) {
                     actualSeller: userAddress,
                     tokenId: nft.tokenId,
                     price,
+                    nftContract: nft.contractAddress
                 }),
             });
             if (res.ok) {
@@ -57,7 +70,9 @@ function NFTCard({ nft, userAddress }) {
 
     return (
         <div style={{ minWidth: 340, maxWidth: 420, background: '#232426', borderRadius: 12, padding: 24, color: '#fff', boxShadow: '0 2px 8px #0002', display: 'flex', flexDirection: 'column', marginBottom: 16, border: '1px solid #333' }}>
-            <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 4, color: '#fff' }}>CarbonNFT #{nft.tokenId}</div>
+            <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 4, color: '#fff' }}>
+                {nftType === 'offset' ? 'Carbon Offset NFT' : 'Carbon Debt NFT'} #{nft.tokenId}
+            </div>
             <div style={{ margin: '12px 0 0 0', fontSize: 15 }}>
                 <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: '#aaa' }}>Contract Address:</span>
@@ -201,7 +216,8 @@ function NFTCard({ nft, userAddress }) {
                 </div>
             </div>
 
-            {!nft.isListed ? (
+            {/* Only show approve/list for offset NFTs and not listed */}
+            {nftType === 'offset' && !nft.isListed && (
                 <div style={{ marginTop: 18, background: '#1a1b1e', borderRadius: 8, padding: 16, border: '1px solid #333' }}>
                     <div style={{ marginBottom: 12 }}>
                         <input
@@ -265,7 +281,10 @@ function NFTCard({ nft, userAddress }) {
                         </button>
                     </div>
                 </div>
-            ) : (
+            )}
+
+            {/* Show listed info if listed */}
+            {nft.isListed && (
                 <div style={{
                     marginTop: 18,
                     background: 'rgba(0, 255, 174, 0.05)',
@@ -303,7 +322,8 @@ function NFTCard({ nft, userAddress }) {
 
 // --- Main List Page Component ---
 const MyNFTs = () => {
-    const [nfts, setNfts] = useState([]);
+    const [offsetNfts, setOffsetNfts] = useState([]);
+    const [debtNfts, setDebtNfts] = useState([]);
     const [address, setAddress] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [connecting, setConnecting] = useState(false);
@@ -356,128 +376,99 @@ const MyNFTs = () => {
             }
             setIsLoading(true);
             try {
-                const { offsetNFT, provider, dex } = await getContracts();
-                const nextTokenId = await offsetNFT.nextTokenId();
-                const nftList = [];
+                const { offsetNFT, debtNFT, provider, dex } = await getContracts();
+
+                // Helper function to fetch metadata
+                const getMetadata = async (nftContract, tokenId) => {
+                    let cid = 'N/A', did = 'N/A';
+                    try {
+                        if (nftContract.getCarbonMetadata) {
+                            const meta = await nftContract.getCarbonMetadata(tokenId);
+                            cid = meta[0] || 'N/A';
+                            did = meta[1] || 'N/A';
+                        } else if (nftContract.getDebtMetadata) {
+                            const meta = await nftContract.getDebtMetadata(tokenId);
+                            did = meta[0] || 'N/A';
+                            cid = meta[1] || 'N/A';
+                        }
+                    } catch (e) {
+                        console.log(`Could not get metadata for token ${tokenId}`, e.message);
+                    }
+                    return { cid, did };
+                };
 
                 // Lấy thông tin listings từ DEX
-                let listingsMap = {};
+                const listingsMap = {};
                 try {
                     const counter = await dex.listingIdCounter();
                     const listingsCount = parseInt(counter.toString());
-
                     for (let i = 1; i <= listingsCount; i++) {
-                        try {
-                            const listing = await dex.listings(i);
-                            if (listing.seller !== ethers.ZeroAddress) {
-                                const key = `${listing.nftContract.toLowerCase()}_${listing.tokenId.toString()}`;
-                                listingsMap[key] = {
-                                    price: ethers.formatUnits(listing.price, 18),
-                                    listingId: i,
-                                    isListed: true
-                                };
-                            }
-                        } catch (listingError) {
-                            console.log(`Error fetching listing ${i}:`, listingError.message);
+                        const listing = await dex.listings(i);
+                        if (listing.seller !== ethers.ZeroAddress) {
+                            const key = `${listing.nftContract.toLowerCase()}_${listing.tokenId.toString()}`;
+                            listingsMap[key] = {
+                                price: ethers.formatUnits(listing.price, 18),
+                                listingId: i,
+                                isListed: true
+                            };
                         }
                     }
                 } catch (dexError) {
                     console.log("Error fetching DEX listings:", dexError.message);
                 }
 
-                for (let i = 0; i < nextTokenId; i++) {
-                    try {
-                        const owner = await offsetNFT.ownerOf(i);
-                        if (owner.toLowerCase() === address.toLowerCase()) {
-                            const tokenURI = await offsetNFT.tokenURI(i);
+                // Fetch NFTs for a given contract
+                const fetchNftsForContract = async (nftContract, type) => {
+                    const nftList = [];
+                    const code = await provider.getCode(nftContract.target);
+                    if (code === '0x') return [];
 
-                            // Lấy thông tin CID và DID từ NFT contract
-                            let cid = 'N/A';
-                            let did = 'N/A';
-                            let contractAddress = offsetNFT.target || offsetNFT.address;
-
-                            try {
-                                // Thử nhiều loại contract khác nhau
-                                const nftContract = new ethers.Contract(contractAddress, [
-                                    "function getDebtMetadata(uint256 tokenId) view returns (string, string, string)",
-                                    "function getCarbonMetadata(uint256 tokenId) view returns (string, string)",
-                                    "function getCID(uint256 tokenId) view returns (string)",
-                                    "function getDID(uint256 tokenId) view returns (string)",
-                                    "function tokenURI(uint256 tokenId) view returns (string)"
-                                ], provider);
-
-                                // Thử method 1: getDebtMetadata (cho CarbonDebtNFT)
-                                try {
-                                    const metadata = await nftContract.getDebtMetadata(i);
-                                    did = metadata[0] || 'N/A'; // meta.did
-                                    cid = metadata[1] || 'N/A'; // meta.ipfsCid
-                                    console.log(`NFT ${i} metadata (getDebtMetadata):`, { did, cid });
-                                } catch (debtError) {
-                                    console.log(`getDebtMetadata failed for token ${i}:`, debtError.message);
-
-                                    // Thử method 2: getCarbonMetadata (cho CarbonOffsetNFT)
-                                    try {
-                                        const carbonMetadata = await nftContract.getCarbonMetadata(i);
-                                        cid = carbonMetadata[0] || 'N/A'; // data.ipfsCid
-                                        did = carbonMetadata[1] || 'N/A'; // data.did
-                                        console.log(`NFT ${i} metadata (getCarbonMetadata):`, { cid, did });
-                                    } catch (carbonError) {
-                                        console.log(`getCarbonMetadata failed for token ${i}:`, carbonError.message);
-
-                                        // Thử method 3: getCID và getDID riêng biệt
-                                        try {
-                                            cid = await nftContract.getCID(i);
-                                            console.log(`CID found: ${cid}`);
-                                        } catch (cidError) {
-                                            console.log(`getCID failed for token ${i}:`, cidError.message);
-                                        }
-
-                                        try {
-                                            did = await nftContract.getDID(i);
-                                            console.log(`DID found: ${did}`);
-                                        } catch (didError) {
-                                            console.log(`getDID failed for token ${i}:`, didError.message);
-                                        }
-
-                                        // Nếu vẫn không lấy được, thử lấy từ tokenURI
-                                        if (cid === 'N/A' && did === 'N/A') {
-                                            try {
-                                                const tokenURIData = await nftContract.tokenURI(i);
-                                                console.log(`TokenURI found: ${tokenURIData}`);
-                                                // Có thể parse tokenURI để lấy metadata nếu cần
-                                                if (tokenURIData && tokenURIData.includes('ipfs://')) {
-                                                    cid = tokenURIData.replace('ipfs://', '');
-                                                }
-                                            } catch (uriError) {
-                                                console.log(`tokenURI failed for token ${i}:`, uriError.message);
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (contractError) {
-                                console.log(`Could not connect to NFT contract for metadata:`, contractError.message);
-                            }
-
-                            // Kiểm tra xem NFT có được list không
-                            const listingKey = `${contractAddress.toLowerCase()}_${i.toString()}`;
-                            const listingInfo = listingsMap[listingKey];
-
-                            nftList.push({
-                                tokenId: i.toString(),
-                                tokenURI,
-                                cid: cid,
-                                did: did,
-                                contractAddress: contractAddress,
-                                listingPrice: listingInfo ? listingInfo.price : null,
-                                listingId: listingInfo ? listingInfo.listingId : null,
-                                isListed: !!listingInfo
-                            });
-                        }
-                    } catch {
-                        // Skip burned or non-existent tokens
+                    let tokenCount = 0;
+                    if (type === 'offset' && nftContract.nextTokenId) {
+                        // CarbonOffsetNFT: use nextTokenId
+                        const nextTokenIdBigInt = await nftContract.nextTokenId();
+                        tokenCount = Number(nextTokenIdBigInt);
+                    } else if (type === 'debt' && nftContract.totalSupply) {
+                        // CarbonDebtNFT: use totalSupply
+                        const totalSupplyBigInt = await nftContract.totalSupply();
+                        tokenCount = Number(totalSupplyBigInt);
                     }
-                }
-                setNfts(nftList);
+
+                    for (let i = 0; i < tokenCount; i++) {
+                        try {
+                            const owner = await nftContract.ownerOf(i);
+                            if (owner.toLowerCase() === address.toLowerCase()) {
+                                const { cid, did } = await getMetadata(nftContract, i);
+                                const contractAddress = nftContract.target;
+                                const listingKey = `${contractAddress.toLowerCase()}_${i.toString()}`;
+                                const listingInfo = listingsMap[listingKey];
+
+                                nftList.push({
+                                    tokenId: i.toString(),
+                                    cid,
+                                    did,
+                                    contractAddress,
+                                    listingPrice: listingInfo ? listingInfo.price : null,
+                                    listingId: listingInfo ? listingInfo.listingId : null,
+                                    isListed: !!listingInfo,
+                                    nftType: type // Add type to each NFT object
+                                });
+                            }
+                        } catch {
+                            // Skip burned/non-existent
+                        }
+                    }
+                    return nftList;
+                };
+
+                const [offsetList, debtList] = await Promise.all([
+                    fetchNftsForContract(offsetNFT, 'offset'),
+                    fetchNftsForContract(debtNFT, 'debt')
+                ]);
+
+                setOffsetNfts(offsetList);
+                setDebtNfts(debtList);
+
             } catch (error) {
                 console.error("Error fetching NFTs:", error);
             }
@@ -494,15 +485,32 @@ const MyNFTs = () => {
         if (isLoading) {
             return <p style={{ color: '#aaa', textAlign: 'center', padding: '40px' }}>Loading your NFTs...</p>;
         }
-        if (nfts.length === 0) {
+        if (offsetNfts.length === 0 && debtNfts.length === 0) {
             return <p style={{ color: '#aaa', textAlign: 'center', padding: '40px' }}>You don't own any NFTs.</p>;
         }
         return (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px' }}>
-                {nfts.map((nft) => (
-                    <NFTCard key={nft.tokenId} nft={nft} userAddress={address} />
-                ))}
-            </div>
+            <>
+                {offsetNfts.length > 0 && (
+                    <div style={{ marginBottom: '40px' }}>
+                        <h3 style={{ color: '#00ffae', marginBottom: '16px', fontSize: '1.25rem', fontWeight: '600', borderBottom: '1px solid #333', paddingBottom: '8px' }}>Carbon Offset NFTs (Listable)</h3>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px' }}>
+                            {offsetNfts.filter(nft => nft.nftType === 'offset').map((nft) => (
+                                <NFTCard key={`offset-${nft.tokenId}`} nft={nft} userAddress={address} nftType={nft.nftType} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {debtNfts.length > 0 && (
+                    <div>
+                        <h3 style={{ color: '#ff7b7b', marginBottom: '16px', fontSize: '1.25rem', fontWeight: '600', borderBottom: '1px solid #333', paddingBottom: '8px' }}>Carbon Debt NFTs (Not Listable)</h3>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px' }}>
+                            {debtNfts.filter(nft => nft.nftType === 'debt').map((nft) => (
+                                <NFTCard key={`debt-${nft.tokenId}`} nft={nft} userAddress={address} nftType={nft.nftType} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </>
         );
     };
 
