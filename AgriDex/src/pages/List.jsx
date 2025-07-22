@@ -610,16 +610,16 @@ const MyNFTs = () => {
                                 // Check if NFT is already listed on DEX
                                 let isListed = false;
                                 let listingPrice = null;
-                                
+
                                 try {
                                     // Get total listing counter
                                     const counter = await dex.listingIdCounter();
                                     const listingsCount = parseInt(counter.toString());
-                                    
+
                                     // Check each listing to see if our NFT is listed
                                     for (let listingId = 1; listingId <= listingsCount; listingId++) {
                                         const listing = await dex.listings(listingId);
-                                        
+
                                         // Check if this listing matches our NFT and is active
                                         if (listing.nftContract.toLowerCase() === contractAddress.toLowerCase() &&
                                             listing.tokenId.toString() === tokenId.toString() &&

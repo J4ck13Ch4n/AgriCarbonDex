@@ -150,7 +150,7 @@ const Trade = () => {
                             let multipleCids = []; // For storing multiple CIDs
 
                             // Determine NFT type based on contract address (same as List.jsx logic)
-                                const nftType = listing.nftContract.toLowerCase() === CARBON_OFFSET_NFT_ADDRESS.toLowerCase() ? 'offset' : 'debt';                            try {
+                            const nftType = listing.nftContract.toLowerCase() === CARBON_OFFSET_NFT_ADDRESS.toLowerCase() ? 'offset' : 'debt'; try {
                                 const nftContract = new ethers.Contract(listing.nftContract, [
                                     "function getDebtMetadata(uint256 tokenId) view returns (string, string, string, uint256)",
                                     "function getCarbonMetadata(uint256 tokenId) view returns (string, string, string)",

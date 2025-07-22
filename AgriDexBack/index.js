@@ -17,7 +17,7 @@ const cct = new ethers.Contract(process.env.CARBON_CREDIT_TOKEN_ADDRESS, CCT_ABI
 app.post('/api/list-nft', async (req, res) => {
     try {
         const { actualSeller, tokenId, price, nftContract } = req.body;
-        
+
         if (!actualSeller || !tokenId || !price || !nftContract) {
             return res.status(400).json({ success: false, error: 'Missing required parameters.' });
         }
@@ -92,7 +92,7 @@ app.post('/api/list-nft', async (req, res) => {
 app.post('/api/buy-nft', async (req, res) => {
     try {
         const { buyer, listingId } = req.body;
-        
+
         if (!buyer || !listingId) {
             return res.status(400).json({ success: false, error: 'Missing params' });
         }
