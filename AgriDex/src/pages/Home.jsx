@@ -1,11 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+
 
 const Home = () => {
   return (
     <div style={{ minHeight: '100vh', background: '#111214', color: '#fff', fontFamily: 'Inter, Roboto Mono, Arial, sans-serif' }}>
-      <Navbar />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '100px 24px 64px', minHeight: '100vh' }}>
 
         {/* Hero Section */}
@@ -263,17 +262,6 @@ const Home = () => {
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <footer style={{
-          marginTop: '80px',
-          color: '#aaa',
-          fontSize: '0.875rem',
-          fontFamily: 'Roboto Mono, monospace',
-          letterSpacing: '1px'
-        }}>
-          © {new Date().getFullYear()} AgriCarbonDex. All rights reserved.
-        </footer>
       </div>
     </div>
   );

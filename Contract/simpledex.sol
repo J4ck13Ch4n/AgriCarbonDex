@@ -14,6 +14,7 @@ contract NFTDEX is Ownable {
         uint256 tokenId;
         address erc20Token;
         uint256 price;
+        uint256 co2Amount; // Store CO2 amount at listing time
     }
 
     uint256 public listingIdCounter;
@@ -25,7 +26,8 @@ contract NFTDEX is Ownable {
         address nftContract,
         uint256 tokenId,
         address erc20Token,
-        uint256 price
+        uint256 price,
+        uint256 co2Amount
     );
     event NFTPurchased(uint256 indexed listingId, address indexed buyer);
     event NFTListingCancelled(
@@ -43,7 +45,8 @@ contract NFTDEX is Ownable {
         address nftContract,
         uint256 tokenId,
         address erc20Token,
-        uint256 price
+        uint256 price,
+        uint256 co2Amount // Add CO2 amount parameter
     ) external onlyOwner {
         // Only contract owner (backend) can call this
         require(
@@ -72,7 +75,8 @@ contract NFTDEX is Ownable {
             nftContract: nftContract,
             tokenId: tokenId,
             erc20Token: erc20Token,
-            price: price
+            price: price,
+            co2Amount: co2Amount // Store CO2 amount
         });
 
         emit NFTListed(
@@ -81,7 +85,8 @@ contract NFTDEX is Ownable {
             nftContract,
             tokenId,
             erc20Token,
-            price
+            price,
+            co2Amount
         );
     }
 

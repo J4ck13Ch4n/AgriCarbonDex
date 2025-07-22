@@ -17,32 +17,69 @@ const cct = new ethers.Contract(process.env.CARBON_CREDIT_TOKEN_ADDRESS, CCT_ABI
 app.post('/api/list-nft', async (req, res) => {
     try {
         const { actualSeller, tokenId, price, nftContract } = req.body;
-        // Log all received parameters and their types
-        console.log('--- /api/list-nft called ---');
-        console.log('actualSeller:', actualSeller, 'type:', typeof actualSeller);
-        console.log('tokenId:', tokenId, 'type:', typeof tokenId);
-        console.log('price:', price, 'type:', typeof price);
-        console.log('nftContract:', nftContract, 'type:', typeof nftContract);
-        // Log loại NFT
-        if (nftContract.toLowerCase() === process.env.CARBON_OFFSET_NFT_ADDRESS.toLowerCase()) {
-            console.log('NFT Type: offset (CarbonOffsetNFT)');
-        } else if (nftContract.toLowerCase() === process.env.CARBON_DEBT_NFT_ADDRESS.toLowerCase()) {
-            console.log('NFT Type: debt (CarbonDebtNFT)');
-        } else {
-            console.log('NFT Type: unknown');
-        }
+        
         if (!actualSeller || !tokenId || !price || !nftContract) {
             return res.status(400).json({ success: false, error: 'Missing required parameters.' });
         }
         const erc20Token = process.env.CARBON_CREDIT_TOKEN_ADDRESS;
 
-        // Gọi hàm listNFTForUser trên contract
+        // Get CO2 amount from NFT contract before listing
+        let co2Amount = 0; // Default to 0
+        try {
+            const nftContractInstance = new ethers.Contract(nftContract, [
+                "function getCarbonMetadata(uint256 tokenId) view returns (string, string, string)",
+                "function carbonData(uint256 tokenId) view returns (string, string, string)"
+            ], provider);
+
+            // Try getCarbonMetadata first
+            try {
+                const carbonMeta = await nftContractInstance.getCarbonMetadata(tokenId);
+                if (carbonMeta && carbonMeta.length >= 3 && carbonMeta[2]) {
+                    co2Amount = carbonMeta[2]; // Keep as string, don't convert to toString()
+                } else {
+                    // Try carbonData as fallback
+                    try {
+                        const carbonData = await nftContractInstance.carbonData(tokenId);
+                        if (carbonData && carbonData.length >= 3 && carbonData[2]) {
+                            co2Amount = carbonData[2]; // Keep as string
+                        }
+                    } catch (dataError) {
+                        // Silent fallback
+                    }
+                }
+            } catch (metaError) {
+                // Silent fallback
+            }
+        } catch (contractError) {
+            // Silent fallback
+        }
+
+        // Convert CO2 amount string to uint256 for contract
+        let co2AmountBigInt;
+        try {
+            if (typeof co2Amount === 'string' && co2Amount !== '0') {
+                // If it's a decimal string, convert to Wei-like format (multiply by 10^18)
+                const co2Float = parseFloat(co2Amount);
+                if (!isNaN(co2Float)) {
+                    co2AmountBigInt = ethers.parseUnits(co2Amount, 18);
+                } else {
+                    co2AmountBigInt = 0n;
+                }
+            } else {
+                co2AmountBigInt = 0n;
+            }
+        } catch (conversionError) {
+            co2AmountBigInt = 0n;
+        }
+
+        // Gọi hàm listNFTForUser trên contract với CO2 amount
         const tx = await nftdex.listNFTForUser(
             actualSeller,
             nftContract,
             tokenId,
             erc20Token,
-            price
+            price,
+            co2AmountBigInt // Use converted BigInt value
         );
         await tx.wait();
         res.json({ success: true, txHash: tx.hash });
@@ -55,14 +92,18 @@ app.post('/api/list-nft', async (req, res) => {
 app.post('/api/buy-nft', async (req, res) => {
     try {
         const { buyer, listingId } = req.body;
-        if (!buyer || !listingId) return res.status(400).json({ success: false, error: 'Missing params' });
+        
+        if (!buyer || !listingId) {
+            return res.status(400).json({ success: false, error: 'Missing params' });
+        }
 
         // Gọi hàm buyNFTForUser trên contract với quyền owner
         const tx = await nftdex.buyNFTForUser(buyer, listingId);
         await tx.wait();
         res.json({ success: true, txHash: tx.hash });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.reason || err.message });
+        console.error("Error buying NFT:", err);
+        res.status(500).json({ success: false, error: err.reason || err.message, stack: err.stack });
     }
 });
 

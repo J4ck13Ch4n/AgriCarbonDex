@@ -4,6 +4,54 @@ import { getContracts } from "../utils/contractHelpers";
 import { NFTDEX_ADDRESS, CARBON_OFFSET_NFT_ADDRESS, CARBON_DEBT_NFT_ADDRESS } from "../utils/constants";
 import '../style/List.css';
 
+// --- Helper Functions ---
+/**
+ * Parse CID data that could be a single CID or multiple CIDs
+ * @param {string|string[]} cidData - CID data from contract
+ * @returns {object} - { cid: string, cids: string[] }
+ */
+function parseCIDData(cidData) {
+    if (!cidData || cidData === 'N/A') {
+        return { cid: 'N/A', cids: [] };
+    }
+
+    // If it's already an array
+    if (Array.isArray(cidData)) {
+        const validCids = cidData.filter(cid => cid && cid !== 'N/A' && cid.trim() !== '');
+        if (validCids.length === 0) {
+            return { cid: 'N/A', cids: [] };
+        }
+        return {
+            cid: validCids[0], // For backward compatibility
+            cids: validCids
+        };
+    }
+
+    // If it's a string, check if it contains multiple CIDs separated by comma or semicolon
+    const cidString = cidData.toString().trim();
+    if (cidString.includes(',') || cidString.includes(';')) {
+        const separator = cidString.includes(',') ? ',' : ';';
+        const cidArray = cidString.split(separator)
+            .map(cid => cid.trim())
+            .filter(cid => cid && cid !== 'N/A');
+
+        if (cidArray.length === 0) {
+            return { cid: 'N/A', cids: [] };
+        }
+
+        return {
+            cid: cidArray[0], // For backward compatibility
+            cids: cidArray
+        };
+    }
+
+    // Single CID
+    return {
+        cid: cidString,
+        cids: [cidString]
+    };
+}
+
 // --- NFT Card Component ---
 function NFTCard({ nft, userAddress, nftType }) {
     const [price, setPrice] = useState("");
@@ -118,9 +166,10 @@ function NFTCard({ nft, userAddress, nftType }) {
                                 if (isNaN(numericAmount)) {
                                     return 'N/A';
                                 }
-                                // Value from contract is grams * 100. To get kg, divide by 100 * 1000 = 100000.
-                                const kgAmount = numericAmount / 100000;
-                                return `${kgAmount.toFixed(2)} kg`;
+                                // Value from contract is in grams, convert to kg
+                                const gramAmount = numericAmount;
+                                const kgAmount = gramAmount;
+                                return `${kgAmount.toFixed(10)} kg`;
                             } catch {
                                 return 'N/A';
                             }
@@ -151,37 +200,129 @@ function NFTCard({ nft, userAddress, nftType }) {
                         </button>
                     </span>
                 </div>
-                <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#aaa' }}>CID:</span>
-                    <span style={{
-                        color: nft.cid !== 'N/A' ? '#00ffae' : '#666',
-                        cursor: nft.cid !== 'N/A' ? 'pointer' : 'default',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        maxWidth: '200px'
-                    }}
-                        title={nft.cid}>
-                        {nft.cid !== 'N/A' ? (nft.cid.length > 20 ? nft.cid.slice(0, 8) + '...' + nft.cid.slice(-8) : nft.cid) : 'N/A'}
-                        {nft.cid !== 'N/A' && (
-                            <button
-                                onClick={() => navigator.clipboard.writeText(nft.cid)}
-                                title="Copy CID"
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    marginLeft: 4,
-                                    padding: 0,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    color: '#00ffae',
-                                    fontSize: 18
-                                }}
-                            >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ffae" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
-                            </button>
+                {/* CID(s) - Support for multiple CIDs */}
+                <div style={{ marginBottom: 2 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: Array.isArray(nft.cids) && nft.cids.length > 1 ? 4 : 0 }}>
+                        <span style={{ color: '#aaa' }}>
+                            {Array.isArray(nft.cids) && nft.cids.length > 1 ? 'CIDs:' : 'CID:'}
+                        </span>
+                        {/* Single CID or fallback display */}
+                        {(!Array.isArray(nft.cids) || nft.cids.length <= 1) && (
+                            <span style={{
+                                color: nft.cid !== 'N/A' ? '#00ffae' : '#666',
+                                cursor: nft.cid !== 'N/A' ? 'pointer' : 'default',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                maxWidth: '200px'
+                            }}
+                                title={nft.cid}>
+                                {nft.cid !== 'N/A' ? (nft.cid.length > 20 ? nft.cid.slice(0, 8) + '...' + nft.cid.slice(-8) : nft.cid) : 'N/A'}
+                                {nft.cid !== 'N/A' && (
+                                    <button
+                                        onClick={() => navigator.clipboard.writeText(nft.cid)}
+                                        title="Copy CID"
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            marginLeft: 4,
+                                            padding: 0,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            color: '#00ffae',
+                                            fontSize: 18
+                                        }}
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ffae" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+                                    </button>
+                                )}
+                            </span>
                         )}
-                    </span>
+                    </div>
+                    {/* Multiple CIDs display */}
+                    {Array.isArray(nft.cids) && nft.cids.length > 1 && (
+                        <div style={{ maxHeight: '120px', overflowY: 'auto', marginLeft: 0 }}>
+                            {/* Copy All CIDs button */}
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 6,
+                                padding: '4px 8px',
+                                background: 'rgba(0, 255, 174, 0.1)',
+                                borderRadius: 4,
+                                border: '1px solid rgba(0, 255, 174, 0.2)'
+                            }}>
+                                <span style={{ color: '#00ffae', fontSize: 12, fontWeight: 600 }}>
+                                    {nft.cids.length} CIDs Total
+                                </span>
+                                <button
+                                    onClick={() => {
+                                        const allCids = nft.cids.join('\n');
+                                        navigator.clipboard.writeText(allCids);
+                                    }}
+                                    title="Copy all CIDs (one per line)"
+                                    style={{
+                                        background: 'rgba(0, 255, 174, 0.2)',
+                                        border: '1px solid rgba(0, 255, 174, 0.3)',
+                                        borderRadius: 3,
+                                        cursor: 'pointer',
+                                        padding: '2px 6px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        color: '#00ffae',
+                                        fontSize: 11,
+                                        fontWeight: 600
+                                    }}
+                                >
+                                    Copy All
+                                </button>
+                            </div>
+                            {nft.cids.map((cid, index) => (
+                                <div key={index} style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: index < nft.cids.length - 1 ? 4 : 0,
+                                    padding: '2px 8px',
+                                    background: index % 2 === 0 ? 'rgba(0, 255, 174, 0.05)' : 'transparent',
+                                    borderRadius: 3
+                                }}>
+                                    <span style={{ color: '#888', fontSize: 12, minWidth: 24 }}>#{index + 1}:</span>
+                                    <span style={{
+                                        color: cid !== 'N/A' ? '#00ffae' : '#666',
+                                        cursor: cid !== 'N/A' ? 'pointer' : 'default',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        fontSize: 13,
+                                        maxWidth: '180px'
+                                    }}
+                                        title={cid}>
+                                        {cid !== 'N/A' ? (cid.length > 18 ? cid.slice(0, 6) + '...' + cid.slice(-6) : cid) : 'N/A'}
+                                        {cid !== 'N/A' && (
+                                            <button
+                                                onClick={() => navigator.clipboard.writeText(cid)}
+                                                title={`Copy CID #${index + 1}`}
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    marginLeft: 4,
+                                                    padding: 0,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    color: '#00ffae',
+                                                    fontSize: 16
+                                                }}
+                                            >
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00ffae" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+                                            </button>
+                                        )}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
                 <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ color: '#aaa' }}>DID:</span>
@@ -373,44 +514,98 @@ const MyNFTs = () => {
                     // The events are iterated in reverse to process the most recent transfers first.
                     for (let i = events.length - 1; i >= 0; i--) {
                         const event = events[i];
+
+                        if (!event.args || !event.args.tokenId) {
+                            continue;
+                        }
+
                         const tokenId = event.args.tokenId;
 
                         if (processedTokenIds.has(tokenId.toString())) {
-                            continue; // Skip if we've already processed this tokenId
+                            continue;
                         }
 
                         try {
                             const currentOwner = await nftContract.ownerOf(tokenId);
-                            // Check if the current owner is the user, this handles cases where the NFT was transferred away
                             if (currentOwner.toLowerCase() === address.toLowerCase()) {
                                 let tokenUri = '';
-                                let cid = 'N/A', did = 'N/A', co2_amount = '0';
+                                let cid = 'N/A', did = 'N/A', co2_amount = '0'; // Default to N/A
+                                let multipleCids = []; // For storing multiple CIDs
 
                                 try {
                                     tokenUri = await nftContract.tokenURI(tokenId);
                                 } catch (uriError) {
-                                    // console.log(`Could not get tokenURI for token ${tokenId}:`, uriError.message);
+                                    console.log(`Could not get tokenURI for token ${tokenId}:`, uriError.message);
                                 }
 
-                                if (typeof nftContract.getCarbonMetadata === 'function') {
+                                if (type === 'offset' && typeof nftContract.getCarbonMetadata === 'function') {
                                     try {
                                         const carbonMeta = await nftContract.getCarbonMetadata(tokenId);
-                                        cid = carbonMeta[0] || 'N/A';
-                                        did = carbonMeta[1] || 'N/A';
-                                        co2_amount = carbonMeta[2] ? carbonMeta[2].toString() : '0';
+                                        // Access tuple elements by index
+                                        if (carbonMeta && carbonMeta.length >= 2) {
+                                            const rawCid = carbonMeta[0] || 'N/A';
+                                            const cidInfo = parseCIDData(rawCid);
+                                            cid = cidInfo.cid;
+                                            did = carbonMeta[1] || 'N/A';
+
+                                            // Check if CO2 amount is available at index 2
+                                            if (carbonMeta.length >= 3 && carbonMeta[2]) {
+                                                co2_amount = carbonMeta[2].toString();
+                                            } else {
+                                                // Try to get CO2 amount from carbonData mapping directly
+                                                try {
+                                                    if (typeof nftContract.carbonData === 'function') {
+                                                        const carbonData = await nftContract.carbonData(tokenId);
+                                                        // carbonData might have co2Amount as the third field
+                                                        if (carbonData && carbonData.length >= 3 && carbonData[2]) {
+                                                            co2_amount = carbonData[2].toString();
+                                                        } else {
+                                                            co2_amount = 'N/A';
+                                                        }
+                                                    } else {
+                                                        co2_amount = 'N/A';
+                                                    }
+                                                } catch (dataError) {
+                                                    console.log(`Could not get carbonData for token ${tokenId}:`, dataError.message);
+                                                    co2_amount = 'N/A';
+                                                }
+                                            }
+                                            console.log(`[Offset NFT] Token ID: ${tokenId}, CID: ${cid}, CIDs: ${JSON.stringify(cidInfo.cids)}, DID: ${did}, CO2 Amount: ${co2_amount}`);
+
+                                            // Store multiple CIDs info for later use
+                                            multipleCids = cidInfo.cids;
+                                        } else {
+                                            console.error(`getCarbonMetadata for offset token ${tokenId} returned insufficient data:`, carbonMeta);
+                                            cid = 'N/A';
+                                            did = 'N/A';
+                                            co2_amount = 'N/A';
+                                        }
                                     } catch (e) {
-                                        // console.log(`getCarbonMetadata failed for ${tokenId}:`, e.message);
+                                        console.error(`getCarbonMetadata failed for offset token ${tokenId}:`, e);
+                                        co2_amount = 'N/A';
                                     }
                                 }
-
-                                if (co2_amount === '0' && typeof nftContract.getDebtMetadata === 'function') {
+                                if (type === 'debt' && typeof nftContract.getDebtMetadata === 'function') {
                                     try {
                                         const debtMeta = await nftContract.getDebtMetadata(tokenId);
-                                        did = debtMeta[0] || 'N/A';
-                                        cid = debtMeta[1] || 'N/A';
-                                        co2_amount = debtMeta[3] ? debtMeta[3].toString() : '0';
+                                        // With the correct ABI, we can access properties by name
+                                        if (debtMeta && typeof debtMeta.co2Amount !== 'undefined') {
+                                            did = debtMeta.did || 'N/A';
+                                            const rawCid = debtMeta.ipfsCid || 'N/A';
+                                            const cidInfo = parseCIDData(rawCid);
+                                            cid = cidInfo.cid;
+                                            co2_amount = debtMeta.co2Amount.toString();
+                                            console.log(`[Debt NFT] Token ID: ${tokenId}, CID: ${cid}, CIDs: ${JSON.stringify(cidInfo.cids)}, Fetched CO2 Amount: ${co2_amount}`);
+
+                                            // Store multiple CIDs info for debt NFTs too
+                                            multipleCids = cidInfo.cids;
+                                        } else {
+                                            console.error(`getDebtMetadata for debt token ${tokenId} returned an invalid or incomplete result:`, debtMeta);
+                                            co2_amount = 'N/A';
+                                        }
                                     } catch (e) {
-                                        // console.log(`getDebtMetadata failed for ${tokenId}:`, e.message);
+                                        console.error(`getDebtMetadata failed for debt token ${tokenId}:`, e);
+                                        co2_amount = 'N/A';
                                     }
                                 }
 
@@ -420,6 +615,7 @@ const MyNFTs = () => {
                                     tokenUri: tokenUri,
                                     nftType: type,
                                     cid: cid,
+                                    cids: multipleCids.length > 0 ? multipleCids : [cid !== 'N/A' ? cid : 'N/A'],
                                     did: did,
                                     co2_amount: co2_amount,
                                     isListed: false,
