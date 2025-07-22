@@ -92,78 +92,38 @@ const Trade = () => {
                             // Lấy thông tin CID và DID từ NFT contract
                             let cid = 'N/A';
                             let did = 'N/A';
+                            let co2_amount = '0'; // Default to '0'
                             try {
-                                // Thử nhiều loại contract khác nhau
                                 const nftContract = new ethers.Contract(listing.nftContract, [
-                                    "function getDebtMetadata(uint256 tokenId) view returns (string, string, string)",
-                                    "function getCarbonMetadata(uint256 tokenId) view returns (string, string)",
-                                    "function getCID(uint256 tokenId) view returns (string)",
-                                    "function getDID(uint256 tokenId) view returns (string)",
-                                    "function tokenURI(uint256 tokenId) view returns (string)",
+                                    "function getDebtMetadata(uint256 tokenId) view returns (string, string, string, uint256)",
+                                    "function getCarbonMetadata(uint256 tokenId) view returns (string, string, uint256)",
                                     "function ownerOf(uint256 tokenId) view returns (address)"
                                 ], provider);
 
-                                // Kiểm tra xem token có tồn tại không
                                 try {
                                     await nftContract.ownerOf(listing.tokenId);
                                 } catch (ownerError) {
-                                    console.log(`Token ${listing.tokenId} does not exist in contract:`, ownerError.message);
-                                    // Token không tồn tại, bỏ qua metadata
-                                    cid = 'Token not found';
-                                    did = 'Token not found';
-                                    continue; // Skip to next iteration
+                                    console.log(`Token ${listing.tokenId} does not exist, skipping.`);
+                                    continue;
                                 }
 
-                                // Thử method 1: getDebtMetadata (cho CarbonDebtNFT)
                                 try {
                                     const metadata = await nftContract.getDebtMetadata(listing.tokenId);
-                                    did = metadata[0] || 'N/A'; // meta.did
-                                    cid = metadata[1] || 'N/A'; // meta.ipfsCid
-                                    console.log(`NFT ${listing.tokenId} metadata (getDebtMetadata):`, { did, cid });
+                                    did = metadata[0] || 'N/A';
+                                    cid = metadata[1] || 'N/A';
+                                    co2_amount = metadata[3] ? metadata[3].toString() : '0';
                                 } catch (debtError) {
-                                    console.log(`getDebtMetadata failed for token ${listing.tokenId}:`, debtError.message);
-
-                                    // Thử method 2: getCarbonMetadata (cho CarbonOffsetNFT)
                                     try {
                                         const carbonMetadata = await nftContract.getCarbonMetadata(listing.tokenId);
-                                        cid = carbonMetadata[0] || 'N/A'; // data.ipfsCid
-                                        did = carbonMetadata[1] || 'N/A'; // data.did
-                                        console.log(`NFT ${listing.tokenId} metadata (getCarbonMetadata):`, { cid, did });
+                                        cid = carbonMetadata[0] || 'N/A';
+                                        did = carbonMetadata[1] || 'N/A';
+                                        co2_amount = carbonMetadata[2] ? carbonMetadata[2].toString() : '0';
                                     } catch (carbonError) {
-                                        console.log(`getCarbonMetadata failed for token ${listing.tokenId}:`, carbonError.message);
-
-                                        // Thử method 3: getCID và getDID riêng biệt
-                                        try {
-                                            cid = await nftContract.getCID(listing.tokenId);
-                                            console.log(`CID found: ${cid}`);
-                                        } catch (cidError) {
-                                            console.log(`getCID failed for token ${listing.tokenId}:`, cidError.message);
-                                        }
-
-                                        try {
-                                            did = await nftContract.getDID(listing.tokenId);
-                                            console.log(`DID found: ${did}`);
-                                        } catch (didError) {
-                                            console.log(`getDID failed for token ${listing.tokenId}:`, didError.message);
-                                        }
-
-                                        // Nếu vẫn không lấy được, thử lấy từ tokenURI
-                                        if (cid === 'N/A' && did === 'N/A') {
-                                            try {
-                                                const tokenURI = await nftContract.tokenURI(listing.tokenId);
-                                                console.log(`TokenURI found: ${tokenURI}`);
-                                                // Có thể parse tokenURI để lấy metadata nếu cần
-                                                if (tokenURI && tokenURI.includes('ipfs://')) {
-                                                    cid = tokenURI.replace('ipfs://', '');
-                                                }
-                                            } catch (uriError) {
-                                                console.log(`tokenURI failed for token ${listing.tokenId}:`, uriError.message);
-                                            }
-                                        }
+                                        console.log(`Could not get metadata for token ${listing.tokenId}`);
                                     }
                                 }
                             } catch (contractError) {
-                                console.log(`Could not connect to NFT contract for metadata:`, contractError.message);
+                                console.log(`Error creating contract instance for metadata:`, contractError.message);
                             }
 
                             items.push({
@@ -174,7 +134,8 @@ const Trade = () => {
                                 erc20Token: listing.erc20Token,
                                 price: ethers.formatUnits(listing.price, 18),
                                 cid: cid,
-                                did: did
+                                did: did,
+                                co2_amount: co2_amount
                             });
                         } else {
                             console.log(`Listing ${i} is NOT active or already sold/cancelled. Seller: ${listing.seller}`);
@@ -300,6 +261,31 @@ const Trade = () => {
                                         <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <span style={{ color: '#aaa' }}>Token Standard:</span>
                                             <span style={{ color: '#fff' }}>ERC721</span>
+                                        </div>
+                                        <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ color: '#aaa' }}>CO₂ Amount:</span>
+                                            <span style={{ color: '#00ffae', fontWeight: 600 }}>
+                                                {(() => {
+                                                    try {
+                                                        const co2String = nft.co2_amount ? nft.co2_amount.toString() : 'N/A';
+
+                                                        if (co2String === 'N/A') {
+                                                            return 'N/A';
+                                                        }
+                                                        if (co2String === '0') {
+                                                            return '0.00 kg';
+                                                        }
+
+                                                        const amountInGramsX100 = BigInt(co2String);
+                                                        const amountInGrams = amountInGramsX100 / 100n;
+                                                        const amountInKg = Number(amountInGrams) / 1000;
+                                                        return `${amountInKg.toFixed(2)} kg`;
+                                                    } catch (e) {
+                                                        console.error("Error parsing co2_amount:", nft.co2_amount, e);
+                                                        return 'N/A';
+                                                    }
+                                                })()}
+                                            </span>
                                         </div>
                                         <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <span style={{ color: '#aaa' }}>Owner:</span>

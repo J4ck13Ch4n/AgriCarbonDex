@@ -23,6 +23,14 @@ app.post('/api/list-nft', async (req, res) => {
         console.log('tokenId:', tokenId, 'type:', typeof tokenId);
         console.log('price:', price, 'type:', typeof price);
         console.log('nftContract:', nftContract, 'type:', typeof nftContract);
+        // Log loại NFT
+        if (nftContract.toLowerCase() === process.env.CARBON_OFFSET_NFT_ADDRESS.toLowerCase()) {
+            console.log('NFT Type: offset (CarbonOffsetNFT)');
+        } else if (nftContract.toLowerCase() === process.env.CARBON_DEBT_NFT_ADDRESS.toLowerCase()) {
+            console.log('NFT Type: debt (CarbonDebtNFT)');
+        } else {
+            console.log('NFT Type: unknown');
+        }
         if (!actualSeller || !tokenId || !price || !nftContract) {
             return res.status(400).json({ success: false, error: 'Missing required parameters.' });
         }
