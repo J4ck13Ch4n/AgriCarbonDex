@@ -112,7 +112,6 @@ const Trade = () => {
             try {
                 setLoading(true);
                 setError(null);
-                console.log("Attempting to fetch listed NFTs..."); // Log bắt đầu
 
                 const { dex, provider } = await getContracts();
 
@@ -125,19 +124,14 @@ const Trade = () => {
 
                 const counter = await dex.listingIdCounter();
                 const listingsCount = parseInt(counter.toString());
-                console.log("Listing ID Counter from contract:", listingsCount); // Log số lượng counter
 
                 const items = [];
                 if (listingsCount > 0) {
                     for (let i = 1; i <= listingsCount; i++) {
-                        console.log(`Fetching listing with ID: ${i}`); // Log ID đang fetch
                         const listing = await dex.listings(i);
-                        console.log(`Listing ${i} data:`, listing); // Log dữ liệu listing thô
 
                         if (listing.seller !== ethers.ZeroAddress) {
-                            console.log(`Listing ${i} is active. Seller: ${listing.seller}`); // Log listing active
-
-                            // Get CO2 amount directly from DEX contract listing
+                            // Get CO2 amount from DEX contract listing
                             let co2_amount = 'N/A';
                             if (listing.length >= 6 && listing[5]) {
                                 try {
@@ -145,13 +139,9 @@ const Trade = () => {
                                     const co2BigInt = listing[5];
                                     const co2Decimal = ethers.formatUnits(co2BigInt, 18);
                                     co2_amount = co2Decimal;
-                                    console.log(`[Trade - DEX] CO2 amount from DEX listing ${i}: ${co2_amount} (raw: ${co2BigInt.toString()})`);
-                                } catch (parseError) {
-                                    console.log(`[Trade - DEX] Error parsing CO2 amount: ${parseError.message}`);
+                                } catch {
                                     co2_amount = 'N/A';
                                 }
-                            } else {
-                                console.log(`[Trade - DEX] CO2 amount not found in listing ${i}, set to N/A`);
                             }
 
                             // Lấy thông tin CID và DID từ NFT contract (chỉ CID và DID)
@@ -160,10 +150,7 @@ const Trade = () => {
                             let multipleCids = []; // For storing multiple CIDs
 
                             // Determine NFT type based on contract address (same as List.jsx logic)
-                            const nftType = listing.nftContract.toLowerCase() === CARBON_OFFSET_NFT_ADDRESS.toLowerCase() ? 'offset' : 'debt';
-                            console.log(`[Trade - Debug] NFT Type for token ${listing.tokenId}: ${nftType}`);
-
-                            try {
+                                const nftType = listing.nftContract.toLowerCase() === CARBON_OFFSET_NFT_ADDRESS.toLowerCase() ? 'offset' : 'debt';                            try {
                                 const nftContract = new ethers.Contract(listing.nftContract, [
                                     "function getDebtMetadata(uint256 tokenId) view returns (string, string, string, uint256)",
                                     "function getCarbonMetadata(uint256 tokenId) view returns (string, string, string)",
@@ -174,7 +161,7 @@ const Trade = () => {
                                 try {
                                     await nftContract.ownerOf(listing.tokenId);
                                 } catch {
-                                    console.log(`Token ${listing.tokenId} does not exist, skipping.`);
+                                    // Token does not exist, skipping
                                     continue;
                                 }
 
@@ -184,7 +171,6 @@ const Trade = () => {
                                     // Try carbon offset metadata first (like in List.jsx)
                                     try {
                                         const carbonMeta = await nftContract.getCarbonMetadata(listing.tokenId);
-                                        console.log(`[Trade - Debug] Raw getCarbonMetadata result for token ${listing.tokenId}:`, carbonMeta);
                                         // Access tuple elements by index
                                         if (carbonMeta && carbonMeta.length >= 2) {
                                             const rawCid = carbonMeta[0] || 'N/A';
@@ -194,7 +180,6 @@ const Trade = () => {
 
                                             // Store multiple CIDs info for later use
                                             multipleCids = cidInfo.cids;
-                                            console.log(`[Trade - Offset NFT] Token ID: ${listing.tokenId}, CID: ${cid}, CIDs: ${JSON.stringify(cidInfo.cids)}, DID: ${did}`);
                                         } else {
                                             console.error(`getCarbonMetadata for offset token ${listing.tokenId} returned insufficient data:`, carbonMeta);
                                             cid = 'N/A';
@@ -208,14 +193,12 @@ const Trade = () => {
                                     // Try debt metadata as fallback
                                     try {
                                         const debtMeta = await nftContract.getDebtMetadata(listing.tokenId);
-                                        console.log(`[Trade - Debug] Raw getDebtMetadata result for token ${listing.tokenId}:`, debtMeta);
                                         // With the correct ABI, we can access properties by name
                                         if (debtMeta && typeof debtMeta.co2Amount !== 'undefined') {
                                             did = debtMeta.did || 'N/A';
                                             const rawCid = debtMeta.ipfsCid || 'N/A';
                                             const cidInfo = parseCIDData(rawCid);
                                             cid = cidInfo.cid;
-                                            console.log(`[Trade - Debt NFT] Token ID: ${listing.tokenId}, CID: ${cid}, CIDs: ${JSON.stringify(cidInfo.cids)}`);
 
                                             // Store multiple CIDs info for debt NFTs too
                                             multipleCids = cidInfo.cids;
@@ -227,7 +210,7 @@ const Trade = () => {
                                     }
                                 }
                             } catch (contractError) {
-                                console.log(`Error creating contract instance for metadata:`, contractError.message);
+                                console.error(`Error creating contract instance for metadata:`, contractError.message);
                             }
 
                             items.push({
@@ -242,15 +225,10 @@ const Trade = () => {
                                 did: did,
                                 co2_amount: co2_amount // Use CO2 amount fetched from DEX contract
                             });
-                        } else {
-                            console.log(`Listing ${i} is NOT active or already sold/cancelled. Seller: ${listing.seller}`);
                         }
                     }
-                } else {
-                    console.log("No listings found based on counter (counter is 0).");
                 }
 
-                console.log("Final items to be set as listedNfts:", items); // Log mảng items cuối cùng
                 setListedNfts(items);
 
             } catch (err) {
@@ -264,7 +242,6 @@ const Trade = () => {
                 }
             } finally {
                 setLoading(false);
-                console.log("Finished fetching listed NFTs attempt."); // Log kết thúc
             }
         };
 
@@ -289,14 +266,6 @@ const Trade = () => {
 
             // Check if buyer has enough CCT balance
             const buyerBalance = await cctContract.balanceOf(buyerAddress);
-            console.log("Debug info:");
-            console.log("CCT Contract Address:", listing.erc20Token);
-            console.log("Buyer Address:", buyerAddress);
-            console.log("Buyer Balance (wei):", buyerBalance.toString());
-            console.log("Buyer Balance (CCT):", ethers.formatUnits(buyerBalance, 18));
-            console.log("Required Price (wei):", priceInWei.toString());
-            console.log("Required Price (CCT):", listing.price);
-
             if (buyerBalance < priceInWei) {
                 setBuyingNftInfo({ id: listing.listingId, loading: false, error: `Insufficient CCT balance. You have ${ethers.formatUnits(buyerBalance, 18)} CCT but need ${listing.price} CCT.`, message: '' });
                 alert(`Insufficient CCT balance. You have ${ethers.formatUnits(buyerBalance, 18)} CCT but need ${listing.price} CCT.`);

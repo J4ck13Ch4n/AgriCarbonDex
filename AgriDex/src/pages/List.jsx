@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { ethers } from "ethers";
 import Navbar from "../components/Navbar";
 import { getContracts } from "../utils/contractHelpers";
 import { NFTDEX_ADDRESS, CARBON_OFFSET_NFT_ADDRESS, CARBON_DEBT_NFT_ADDRESS } from "../utils/constants";
@@ -496,7 +497,7 @@ const MyNFTs = () => {
             if (!address) return;
             setIsLoading(true);
             try {
-                const { offsetNFT, debtNFT } = await getContracts();
+                const { offsetNFT, debtNFT, dex } = await getContracts();
 
                 const fetchNftsForContract = async (nftContract, type, contractAddress) => {
                     if (!nftContract || !address) {
@@ -534,8 +535,8 @@ const MyNFTs = () => {
 
                                 try {
                                     tokenUri = await nftContract.tokenURI(tokenId);
-                                } catch (uriError) {
-                                    console.log(`Could not get tokenURI for token ${tokenId}:`, uriError.message);
+                                } catch {
+                                    // Token URI not available
                                 }
 
                                 if (type === 'offset' && typeof nftContract.getCarbonMetadata === 'function') {
@@ -565,12 +566,10 @@ const MyNFTs = () => {
                                                     } else {
                                                         co2_amount = 'N/A';
                                                     }
-                                                } catch (dataError) {
-                                                    console.log(`Could not get carbonData for token ${tokenId}:`, dataError.message);
+                                                } catch {
                                                     co2_amount = 'N/A';
                                                 }
                                             }
-                                            console.log(`[Offset NFT] Token ID: ${tokenId}, CID: ${cid}, CIDs: ${JSON.stringify(cidInfo.cids)}, DID: ${did}, CO2 Amount: ${co2_amount}`);
 
                                             // Store multiple CIDs info for later use
                                             multipleCids = cidInfo.cids;
@@ -595,7 +594,6 @@ const MyNFTs = () => {
                                             const cidInfo = parseCIDData(rawCid);
                                             cid = cidInfo.cid;
                                             co2_amount = debtMeta.co2Amount.toString();
-                                            console.log(`[Debt NFT] Token ID: ${tokenId}, CID: ${cid}, CIDs: ${JSON.stringify(cidInfo.cids)}, Fetched CO2 Amount: ${co2_amount}`);
 
                                             // Store multiple CIDs info for debt NFTs too
                                             multipleCids = cidInfo.cids;
@@ -609,6 +607,32 @@ const MyNFTs = () => {
                                     }
                                 }
 
+                                // Check if NFT is already listed on DEX
+                                let isListed = false;
+                                let listingPrice = null;
+                                
+                                try {
+                                    // Get total listing counter
+                                    const counter = await dex.listingIdCounter();
+                                    const listingsCount = parseInt(counter.toString());
+                                    
+                                    // Check each listing to see if our NFT is listed
+                                    for (let listingId = 1; listingId <= listingsCount; listingId++) {
+                                        const listing = await dex.listings(listingId);
+                                        
+                                        // Check if this listing matches our NFT and is active
+                                        if (listing.nftContract.toLowerCase() === contractAddress.toLowerCase() &&
+                                            listing.tokenId.toString() === tokenId.toString() &&
+                                            listing.seller !== '0x0000000000000000000000000000000000000000') {
+                                            isListed = true;
+                                            listingPrice = ethers.formatUnits(listing.price, 18);
+                                            break;
+                                        }
+                                    }
+                                } catch (listingError) {
+                                    console.error(`Error checking listing for token ${tokenId}:`, listingError.message);
+                                }
+
                                 nftList.push({
                                     tokenId: tokenId.toString(),
                                     contractAddress: contractAddress,
@@ -618,8 +642,8 @@ const MyNFTs = () => {
                                     cids: multipleCids.length > 0 ? multipleCids : [cid !== 'N/A' ? cid : 'N/A'],
                                     did: did,
                                     co2_amount: co2_amount,
-                                    isListed: false,
-                                    listingPrice: null
+                                    isListed: isListed,
+                                    listingPrice: listingPrice
                                 });
 
                                 processedTokenIds.add(tokenId.toString());

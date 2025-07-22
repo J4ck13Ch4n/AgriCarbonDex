@@ -17,7 +17,6 @@ const Sell = () => {
     const handleConnect = async () => {
         // Prevent calling connect if already in progress
         if (connecting) {
-            console.log("MetaMask connection is already in progress. Please wait.");
             return;
         }
 

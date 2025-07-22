@@ -11,13 +11,12 @@ const Layout = () => {
 
   const handleConnect = async () => {
     if (connecting) {
-      console.log("MetaMask connection is already in progress. Please wait.");
       return;
     }
 
     setConnecting(true); 
     try {
-      const { provider, signer } = await connectWallet(); 
+      const { signer } = await connectWallet(); 
       const connectedAccount = await signer.getAddress();
       
       setAccount(connectedAccount); 
@@ -43,7 +42,6 @@ const Layout = () => {
       // setProvider(null);
       // setSigner(null);
       alert('Wallet disconnected. Please disconnect from MetaMask UI if auto-connect persists.');
-      console.log("Wallet disconnected.");
   };
 
   useEffect(() => {
@@ -62,12 +60,10 @@ const Layout = () => {
     checkInitialConnection();
 
     const handleAccountsChanged = (accounts) => {
-      console.log("MetaMask accounts changed:", accounts);
       setAccount(accounts.length > 0 ? accounts[0] : null);
     };
 
-    const handleChainChanged = (chainId) => {
-      console.log("MetaMask chain changed to:", chainId);
+    const handleChainChanged = () => {
       // window.location.reload(); 
     };
 
