@@ -72,7 +72,7 @@ const Dashboard = () => {
             offsetNftsOwned: prevStats.offsetNftsOwned + 1,
           }));
         } else { // Sell NFT
-            setUserStats(prevStats => ({
+          setUserStats(prevStats => ({
             ...prevStats,
             cctBalance: prevStats.cctBalance + parseInt(newTx.amount),
             offsetNftsOwned: prevStats.offsetNftsOwned > 0 ? prevStats.offsetNftsOwned - 1 : 0,
