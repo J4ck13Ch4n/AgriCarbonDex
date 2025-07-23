@@ -1,3 +1,13 @@
+/* src/index.css - PHIÊN BẢN ĐÃ DỌN SẠCH */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Giữ lại style cho body của toàn trang, nhưng xóa tất cả các class
+   .chatbot-popup, .chat-header, v.v... vì chúng không còn được dùng nữa */
+body {
+    min-height: 100vh;
+    /* Bạn có thể giữ lại background này nếu nó là background cho toàn bộ trang web */
+    background: linear-gradient(#EEEEFF, #C8C7FF);
+}
