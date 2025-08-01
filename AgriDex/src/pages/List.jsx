@@ -168,9 +168,7 @@ function NFTCard({ nft, userAddress, nftType }) {
                                     return 'N/A';
                                 }
                                 // Value from contract is in grams, convert to kg
-                                const gramAmount = numericAmount;
-                                const kgAmount = gramAmount;
-                                return `${kgAmount.toFixed(10)} kg`;
+                                return `${numericAmount.toFixed(10)} ton`;
                             } catch {
                                 return 'N/A';
                             }

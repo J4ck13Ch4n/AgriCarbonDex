@@ -421,7 +421,7 @@ const Trade = () => {
                                                             return 'N/A';
                                                         }
                                                         // Value from DEX is already in the correct unit (kg from Wei-like format)
-                                                        return `${numericAmount.toFixed(10)} kg`;
+                                                        return `${numericAmount.toFixed(10)} ton`;
                                                     } catch {
                                                         return 'N/A';
                                                     }

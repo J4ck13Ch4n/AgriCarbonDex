@@ -1,97 +1,106 @@
-# AgriCarbonDex - Sàn Giao Dịch Tín Chỉ Carbon NFT
+# AgriCarbonDEX - Sàn Giao Dịch Tín Chỉ Carbon NFT
 
-## 1. Giới Thiệu
+## Giới Thiệu
 
-AgriCarbonDex là một ứng dụng phi tập trung (DApp) được xây dựng trên blockchain, cho phép người dùng giao dịch các Tín chỉ Carbon được token hóa dưới dạng NFT (ERC-721). Người dùng có thể sử dụng một loại token tiện ích là Carbon Credit Token (CCT - ERC-20) để mua bán các NFT này.
+**AgriCarbonDEX** là sàn giao dịch phi tập trung (DApp) cho **Carbon NFT** trên blockchain Ethereum Sepolia. Sử dụng **Carbon Credit Token (CCT)** để thanh toán các giao dịch NFT tín chỉ carbon.
 
-Dự án này mô phỏng một hệ thống giao dịch tín chỉ carbon minh bạch, nơi mọi giao dịch đều được ghi lại trên blockchain, đảm bảo tính toàn vẹn và không thể thay đổi.
+### Tính Năng
+- 🛒 **Giao dịch NFT**: Mua/bán Carbon Offset NFT
+- 💰 **Quản lý CCT**: Mua/bán token thanh toán
+- 📝 **Niêm yết**: Đưa NFT lên sàn giao dịch  
+- 📊 **Dashboard**: Theo dõi thống kê giao dịch
+- 🤖 **AI Chatbot**: Hỗ trợ người dùng 24/7
 
-## 2. Kiến Trúc Dự Án
+## Kiến Trúc Hệ Thống
 
-Dự án được chia thành 3 thành phần chính:
+```
+AgriCarbonDEX/
+├── AgriDex/          # Frontend (React + Vite)
+├── AgriDexBack/      # Backend (Node.js + Express) 
+├── Contract/         # Smart Contracts (Solidity)
+└── RAG_Chatbot/     # AI Chatbot (Python)
+```
 
--   `AgriDex/` (Frontend): Giao diện người dùng được xây dựng bằng React, sử dụng Vite làm công cụ build. Đây là nơi người dùng tương tác với DApp.
--   `AgriDexBack/` (Backend): Một máy chủ Node.js/Express đóng vai trò hỗ trợ. Backend xử lý các tác vụ yêu cầu quyền của người sở hữu (owner), chẳng hạn như list một NFT lên sàn thay cho người dùng sau khi họ đã "approve".
--   `ERC721-ERC20/` (Smart Contracts): Chứa mã nguồn các hợp đồng thông minh viết bằng Solidity, bao gồm token CCT (ERC-20), NFT Tín chỉ Carbon (ERC-721) và hợp đồng sàn giao dịch (DEX).
+## Smart Contracts
 
-## 3. Công Nghệ Sử Dụng
+### CarbonCreditToken (ERC-20)
+- Token thanh toán với symbol **CCT**
+- Chức năng mint cho admin
 
--   **Frontend:** React, Vite, Ethers.js, CSS
--   **Backend:** Node.js, Express.js, Ethers.js, Dotenv
--   **Blockchain:** Solidity, Mạng thử nghiệm Sepolia
--   **Ví:** MetaMask
+### CarbonOffsetNFT (ERC-721) 
+- NFT tín chỉ carbon với metadata CO₂
+- Lưu trữ IPFS CID và DID
 
-## 4. Hướng Dẫn Cài Đặt và Chạy Dự Án
+### NFTDEX (Marketplace)
+- Sàn giao dịch NFT
+- Xử lý listing và trading thông qua backend proxy
+
+## Công Nghệ Sử Dụng
+
+- **Frontend**: React, Vite, Ethers.js, TailwindCSS
+- **Backend**: Node.js, Express.js  
+- **Blockchain**: Solidity, Ethereum Sepolia, MetaMask
+- **AI**: Python Flask, RAG Chatbot
+
+## Hướng Dẫn Cài Đặt
 
 ### Yêu Cầu
+- Node.js ≥ 16.0.0
+- Python ≥ 3.8 (cho chatbot)
+- MetaMask browser extension
 
--   Node.js (phiên bản 16 trở lên)
--   npm hoặc yarn
--   Ví MetaMask đã cài đặt trên trình duyệt
+### 1. Deploy Smart Contracts
+Sử dụng Remix IDE deploy lên Ethereum Sepolia:
+1. `CarbonCreditToken.sol`
+2. `CarbonOffsetNFT.sol` 
+3. `NFTDEX.sol`
 
-### Bước 1: Triển Khai Smart Contract
+### 2. Setup Backend
+```bash
+cd AgriDexBack
+npm install
 
-1.  Các file mã nguồn Solidity nằm trong thư mục `ERC721-ERC20/`.
-2.  Sử dụng một công cụ như Remix, Hardhat hoặc Truffle để biên dịch và triển khai các hợp đồng sau lên mạng thử nghiệm **Sepolia**:
-    -   `CarbonCreditToken.sol`
-    -   `CarbonOffsetNFT.sol`
-    -   `NFTDEX.sol` (hoặc `simpledex.sol` tùy vào file bạn sử dụng)
-3.  Sau khi triển khai, lưu lại địa chỉ của cả 3 hợp đồng.
+# Tạo file .env
+PRIVATE_KEY=your_private_key
+RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID
+NFTDEX_ADDRESS=0x...
+CARBON_OFFSET_NFT_ADDRESS=0x...
+CARBON_CREDIT_TOKEN_ADDRESS=0x...
 
-### Bước 2: Cấu Hình và Chạy Backend
+npm start
+```
 
-1.  Đi tới thư mục backend:
-    ```sh
-    cd AgriCarbonDex/AgriDexBack
-    ```
-2.  Cài đặt các dependencies:
-    ```sh
-    npm install
-    ```
-3.  Tạo một file `.env` trong thư mục `AgriDexBack` và điền các thông tin sau:
-    ```env
-    # Khóa riêng của tài khoản đã triển khai các smart contract (ví owner)
-    PRIVATE_KEY=YOUR_DEPLOYER_PRIVATE_KEY
+### 3. Setup Frontend
+```bash
+cd AgriDex
+npm install
 
-    # URL của một node RPC mạng Sepolia (ví dụ từ Infura, Alchemy)
-    RPC_URL=YOUR_SEPOLIA_RPC_URL
+# Cập nhật addresses trong src/utils/constants.js
+npm run dev
+```
 
-    # Địa chỉ các contract đã triển khai ở Bước 1
-    NFTDEX_ADDRESS=YOUR_NFTDEX_CONTRACT_ADDRESS
-    CARBON_OFFSET_NFT_ADDRESS=YOUR_CARBON_OFFSET_NFT_ADDRESS
-    CARBON_CREDIT_TOKEN_ADDRESS=YOUR_CARBON_CREDIT_TOKEN_ADDRESS
-    ```
-4.  Khởi động máy chủ backend:
-    ```sh
-    npm start
-    ```
-    Máy chủ sẽ chạy tại `http://localhost:3001`.
+### 4. Setup Chatbot (Tùy chọn)
+```bash
+cd AgriDex/RAG_Chatbot
+pip install -r requirements.txt
+python BackEnd.py
+```
 
-### Bước 3: Cấu Hình và Chạy Frontend
+## Hướng Dẫn Sử Dụng
 
-1.  Mở một terminal mới và đi tới thư mục frontend:
-    ```sh
-    cd AgriCarbonDex/AgriDex
-    ```
-2.  Cài đặt các dependencies:
-    ```sh
-    npm install
-    ```
-3.  Cập nhật địa chỉ contract trong code frontend (nếu cần). Một số địa chỉ có thể được hardcode trong các file như `src/utils/constants.js` hoặc trực tiếp trong các component. Hãy kiểm tra và đảm bảo chúng khớp với địa chỉ bạn đã triển khai.
-4.  Khởi động ứng dụng React:
-    ```sh
-    npm run dev
-    ```
-    Ứng dụng sẽ chạy tại `http://localhost:5173` (hoặc một cổng khác do Vite chỉ định).
+1. **Kết nối MetaMask**: Chuyển sang mạng Sepolia Testnet
+2. **Mua CCT**: Truy cập `/buy` để request CCT tokens
+3. **List NFT**: Vào `/list`, approve NFT và set giá
+4. **Trade**: Vào `/trade` để mua/bán NFT
+5. **Dashboard**: Xem thống kê tại `/dashboard`
+6. **Chatbot**: Click widget góc phải để được hỗ trợ
 
-## 5. Hướng Dẫn Sử Dụng
+## API Endpoints
 
-1.  Mở trình duyệt và truy cập `http://localhost:5173`.
-2.  Kết nối ví MetaMask của bạn với mạng Sepolia.
-3.  **Mua Token CCT:** Truy cập trang "/buy" để mua token CCT. Chức năng này có thể được quản lý bởi backend (admin mint).
-4.  **List NFT:**
-    -   Đảm bảo bạn sở hữu một vài Carbon Offset NFT.
-    -   Truy cập trang "/list".
-    -   Với mỗi NFT, bạn cần nhấn "Approve" để cấp quyền cho sàn DEX tương tác với NFT đó.
-    -   Sau khi approve, nhập giá (bằng CCT) và nhấn "List" để đưa NFT lên sàn.
-5.  **Giao dịch:** Truy cập các trang "/trade" để xem các NFT đang được niêm yết và thực hiện giao dịch.
+- `POST /api/list-nft` - List NFT lên sàn
+- `POST /api/buy-nft` - Mua NFT 
+- `POST /api/request-mint-cct` - Mint CCT tokens
+
+---
+
+**AgriCarbonDEX - Sàn giao dịch carbon xanh và bền vững**
